@@ -40,8 +40,8 @@ func AtlasApiConf(f string) AtlasApi {
 	conf, _ := os.Open(f)
 	defer conf.Close()
 	p := json.NewDecoder(conf)
-    p.Decode(&api)
-    return api
+	p.Decode(&api)
+	return api
 }
 
 func MongoPing(mongoUri string) {
