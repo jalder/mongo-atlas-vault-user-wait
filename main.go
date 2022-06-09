@@ -18,6 +18,13 @@ import (
 	"time"
 )
 
+type AtlasApi struct {
+	PublicKey string `json:"publicKey"`
+	PrivateKey string `json:"privateKey"`
+	ProjectId string `json:"projectId"`
+	ClusterName string `json:"clusterName"`
+}
+
 type AtlasStatus struct {
 	ChangeStatus string `json:"changeStatus"`
 }
@@ -28,8 +35,16 @@ func MD5Hex(s string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func MongoPing() {
-	mongoUri := os.Getenv("MONGODB_URI")
+func AtlasApiConf(f string) AtlasApi {
+	var api AtlasApi
+	conf, _ := os.Open(f)
+	defer conf.Close()
+	p := json.NewDecoder(conf)
+    p.Decode(&api)
+    return api
+}
+
+func MongoPing(mongoUri string) {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoUri))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -41,7 +56,6 @@ func MongoPing() {
 			os.Exit(0)
 		}
 	}()
-
 	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -53,18 +67,43 @@ func MongoPing() {
 func main() {
 	fmt.Println("Starting MongoDB Atlas x Vault DB User Liveness Check")
 
-	//todo: use atlascli env var names instead
-	//todo: show example of setting these in a Vault secret
-	//todo: show example of building connection string from Vault database secret
+	//pull config from vault secrets mount
+	confPath := ""
+	if len(os.Args) > 1 {
+		confPath = os.Args[1]
+	}
+	conf := AtlasApiConf(confPath)
+	groupId := conf.ProjectId
+	clusterName := conf.ClusterName
+	publicKey := conf.PublicKey
+	privateKey := conf.PrivateKey
 
-	groupId := os.Getenv("MCLI_PROJECT_ID")
-	clusterName := os.Getenv("MCLI_CLUSTER_NAME")
-	publicKey := os.Getenv("MCLI_PUBLIC_API_KEY")
-	privateKey := os.Getenv("MCLI_PRIVATE_API_KEY")
-	mongoUri := os.Getenv("MONGODB_URI")
+	dbPath := ""
+	if len(os.Args) > 2 {
+		dbPath = os.Args[2]
+	}
+	dbFile, _ := ioutil.ReadFile(dbPath)
+	mongoUri := string(dbFile)
 
+	//environment variables take precedence
+	if os.Getenv("MONGODB_ATLAS_PROJECT_ID") != "" {
+		groupId = os.Getenv("MONGODB_ATLAS_PROJECT_ID")
+	}
+	if os.Getenv("MONGODB_ATLAS_CLUSTER_NAME") != "" {
+		clusterName = os.Getenv("MONGODB_ATLAS_CLUSTER_NAME")
+	}
+	if os.Getenv("MONGODB_ATLAS_PUBLIC_API_KEY") != "" {
+		publicKey = os.Getenv("MONGODB_ATLAS_PUBLIC_API_KEY")
+	}
+	if os.Getenv("MONGODB_ATLAS_PRIVATE_API_KEY") != "" {
+		privateKey = os.Getenv("MONGODB_ATLAS_PRIVATE_API_KEY")
+	}
+	if os.Getenv("MONGODB_URI") != "" {
+		mongoUri = os.Getenv("MONGODB_URI")
+	}
+	
 	if groupId == "" || clusterName == "" || publicKey == "" || privateKey == "" || mongoUri == "" {
-		fmt.Println("Missing required environment variables.")
+		fmt.Println("Missing required variables.")
 		os.Exit(1)
 	}
 	for {
@@ -144,7 +183,7 @@ func main() {
 				if state.ChangeStatus == "APPLIED" {
 					fmt.Println("Atlas reports changeStatus: " + string(state.ChangeStatus))
 					fmt.Println("Confirming Vault Credentials and Atlas Access are Valid...")
-					MongoPing()
+					MongoPing(mongoUri)
 					fmt.Println("Exiting")
 					os.Exit(0)
 				} else {
