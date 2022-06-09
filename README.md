@@ -67,4 +67,13 @@ metadata:
 
 The example main.go app uses this approach.
 
+
+## Build
+
+```
+docker build -t atlas-wait-ready
+```
+
+## Disclaimer
+
 Not supported by MongoDB.
