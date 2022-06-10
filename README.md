@@ -6,7 +6,7 @@ There is a delay between database credential request and rollout completion.  Th
 
 ## Examples
 
-### Environment Variables
+### Environment Variables and Bash
 
 The following vault injector annotation examples contain the `agent-init-first` option.  This is required to place the vault injector initContainer **before** the wait and validate initContainer in this project executes.
 
@@ -40,7 +40,10 @@ Reasons not to use in prod:
 - it can end up in an infinite loop
 - it's ridiculous 
 
-### Config File
+
+### Config File and Application (better)
+
+The next example (`examples/image-style.yaml`) uses a json config file and a custom image (`main.go`).  It is a better solution.
 
 ```
 metadata:
@@ -65,9 +68,6 @@ metadata:
     vault.hashicorp.com/agent-init-first: 'true'
 ```
 
-The example main.go app uses this approach.
-
-
 ## Build
 
 ```
@@ -78,7 +78,7 @@ docker build -t atlas-wait-ready .
 
 For anything other than PoC or sandbox, I recommend building and maintaining this image in an in-house registry.
 
-Push to your registry of choice and update the initContainer's image path in the example snippet below.
+Push to your registry of choice and update the initContainer's image path in the example patch snippet below.
 
 ```
   initContainers:
