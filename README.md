@@ -71,9 +71,43 @@ The example main.go app uses this approach.
 ## Build
 
 ```
-docker build -t atlas-wait-ready
+docker build -t atlas-wait-ready .
 ```
+
+## Deploy
+
+For anything other than PoC or sandbox, I recommend building and maintaining this image in an in-house registry.
+
+Push to your registry of choice and update the initContainer's image path in the example snippet below.
+
+```
+  initContainers:
+    - image: jalder/atlas-wait-ready:0.0.1
+      name: wait-db-user-ready
+      command: ["/atlas-wait-ready"]
+      args: 
+       - -apiKeyFile
+       - "/vault/secrets/atlasapi" 
+       - -uriFile
+       - "/vault/secrets/atlas"
+```
+
+Successful runs should contain logs similar to:
+```
+$ kubectl logs -n mongodb devwebapp -c wait-db-user-ready
+Starting MongoDB Atlas x Vault DB User Liveness Check
+Checking Status of Cluster User Changes...
+Atlas reports changeStatus: PENDING
+Sleeping...
+Checking Status of Cluster User Changes...
+Atlas reports changeStatus: APPLIED
+Confirming Vault Credentials and Atlas Access are Valid...
+MongoDB Atlas Authentication Succeeded and Primary Pinged.
+Exiting
+```
+
+The above test implies Atlas took ~10 seconds to apply and confirm the database user is ready for use.
 
 ## Disclaimer
 
-Not supported by MongoDB.
+Not supported by anyone.

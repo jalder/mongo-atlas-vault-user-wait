@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    vault.hashicorp.com/agent-inject: 'true'
+    vault.hashicorp.com/role: 'devweb-app'
+    vault.hashicorp.com/agent-inject-secret-atlas: 'database/creds/my-role'
+    vault.hashicorp.com/agent-inject-template-atlas: |
+      {{ with secret "database/creds/my-role" -}}
+        mongodb+srv://{{ .Data.username }}:{{ .Data.password }}@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+      {{- end }}    
+    vault.hashicorp.com/agent-inject-secret-atlasapi: 'kv/atlas/api-readonly'
+    vault.hashicorp.com/agent-inject-template-atlasapi: |
+      {{ with secret "kv/atlas/api-readonly" -}}
+        {
+          "publicKey":"{{ .Data.data.MONGODB_ATLAS_PUBLIC_API_KEY }}",
+          "privateKey":"{{ .Data.data.MONGODB_ATLAS_PRIVATE_API_KEY }}",
+          "projectId":"{{ .Data.data.MONGODB_ATLAS_PROJECT_ID }}",
+          "clusterName":"{{ .Data.data.MONGODB_ATLAS_CLUSTER_NAME }}"
+        }
+      {{- end }}
+    vault.hashicorp.com/agent-init-first: 'true'
+  labels:
+    app: devwebapp
+  name: devwebapp
+  namespace: mongodb
+spec:
+  serviceAccountName: internal-app
+  initContainers:
+    - image: jalder/atlas-wait-ready:0.0.1
+      name: wait-db-user-ready
+      imagePullPolicy: Always
+      command: ["/atlas-wait-ready"]
+      args: 
+       - -apiKeyFile
+       - "/vault/secrets/atlasapi" 
+       - -uriFile
+       - "/vault/secrets/atlas"
+  containers:
+  - image: busybox
+    imagePullPolicy: Always
+    name: app
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
