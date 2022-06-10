@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -68,21 +69,17 @@ func main() {
 	fmt.Println("Starting MongoDB Atlas x Vault DB User Liveness Check")
 
 	//pull config from vault secrets mount
-	confPath := ""
-	if len(os.Args) > 1 {
-		confPath = os.Args[1]
-	}
-	conf := AtlasApiConf(confPath)
+	confPath := flag.String("apiKeyFile", "/vault/secrets/atlasapi", "path to Atlas API keyfile")
+	dbPath := flag.String("uriFile", "/vault/secrets/atlas", "path to Atlas db connection URI")
+	flag.Parse()
+
+	conf := AtlasApiConf(*confPath)
 	groupId := conf.ProjectId
 	clusterName := conf.ClusterName
 	publicKey := conf.PublicKey
 	privateKey := conf.PrivateKey
 
-	dbPath := ""
-	if len(os.Args) > 2 {
-		dbPath = os.Args[2]
-	}
-	dbFile, _ := ioutil.ReadFile(dbPath)
+	dbFile, _ := ioutil.ReadFile(*dbPath)
 	mongoUri := string(dbFile)
 
 	//environment variables take precedence
