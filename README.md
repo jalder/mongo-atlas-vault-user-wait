@@ -8,9 +8,9 @@ There is a delay between database credential request and rollout completion.  Th
 
 ### Environment Variables
 
-Considering the following vault injector annotation examples, note the `agent-init-first` option.  This is required to place the vault injector initContainer **before** the wait and validate initContainer in this project executes.
+The following vault injector annotation examples contain the `agent-init-first` option.  This is required to place the vault injector initContainer **before** the wait and validate initContainer in this project executes.
 
-We proceed to gather the required environment variables to communicate with the Atlas API from Vault as well.
+We then gather the required environment variables to communicate with the Atlas API from Vault as well.
 
 ```
 metadata:
@@ -106,7 +106,7 @@ MongoDB Atlas Authentication Succeeded and Primary Pinged.
 Exiting
 ```
 
-The above test implies Atlas took ~10 seconds to apply and confirm the database user is ready for use.
+The above test implies Atlas took ~10 seconds to apply and confirm the database user is ready for use.  The example image build is about 15MB in size (compressed).
 
 ## Disclaimer
 
