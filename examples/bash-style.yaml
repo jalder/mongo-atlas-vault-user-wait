@@ -18,6 +18,7 @@ metadata:
           export MONGODB_ATLAS_CLUSTER_NAME="{{ .Data.data.MONGODB_ATLAS_CLUSTER_NAME }}"
       {{- end }}
     vault.hashicorp.com/agent-init-first: 'true'
+    vault.hashicorp.com/agent-cache-enable: "true"
   labels:
     app: devwebapp
   name: devwebapp

@@ -8,7 +8,7 @@ There is a delay between database credential request and rollout completion.  Th
 
 ### Environment Variables and Bash
 
-The following vault injector annotation examples contain the `agent-init-first` option.  This is required to place the vault injector initContainer **before** the wait and validate initContainer in this project executes.
+The following vault injector annotation examples contain the `agent-init-first` and `agent-cache-enable` options.  The `agent-init-first` is required to place the vault injector initContainer **before** the wait and validate initContainer as this project executes.  The `agent-cache-enable` avoids firing the injector credential request for each initContainer and container, generating only one set of database credentials for the pod.
 
 We then gather the required environment variables to communicate with the Atlas API from Vault as well.
 
@@ -31,6 +31,7 @@ metadata:
         export MONGODB_ATLAS_CLUSTER_NAME="{{ .Data.MONGODB_ATLAS_CLUSTER_NAME }}"
       {{- end }}
     vault.hashicorp.com/agent-init-first: 'true'
+    vault.hashicorp.com/agent-cache-enable: "true"
 ```
 
 In examples/bash-style.yaml, you will find a proof of concept implementation.  This is not intended for production usage.
@@ -66,6 +67,7 @@ metadata:
         }
       {{- end }}
     vault.hashicorp.com/agent-init-first: 'true'
+    vault.hashicorp.com/agent-cache-enable: "true"
 ```
 
 ## Build
