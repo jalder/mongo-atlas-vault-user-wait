@@ -109,6 +109,3 @@ Exiting
 
 The above test implies Atlas took ~10 seconds to apply and confirm the database user is ready for use.  The example image build is about 15MB in size (compressed).  Further reduction in image size could be achieved by removing the database connectivity test (and dependencies) and exit after confirming the Atlas API completed the plan changes.
 
-## Disclaimer
-
-This example solution is not supported by MongoDB.
