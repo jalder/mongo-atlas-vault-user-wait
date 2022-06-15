@@ -31,20 +31,19 @@ metadata:
         export MONGODB_ATLAS_CLUSTER_NAME="{{ .Data.MONGODB_ATLAS_CLUSTER_NAME }}"
       {{- end }}
     vault.hashicorp.com/agent-init-first: 'true'
-    vault.hashicorp.com/agent-cache-enable: "true"
+    vault.hashicorp.com/agent-cache-enable: 'true'
 ```
 
 In examples/bash-style.yaml, you will find a proof of concept implementation.  This is not intended for production usage.
 Reasons not to use in prod:
-- the image is excessive in size
-- mediocre security
-- it can end up in an infinite loop
-- it's ridiculous 
+- the initContainer image is excessive in size
+- credentials are held in environment variables in the container
+- no timeout, although liveness and readiness settings could catch an infinite loop
 
 
 ### Config File and Application (better)
 
-The next example (`examples/image-style.yaml`) uses a json config file and a custom image (`main.go`).  It is a better solution.
+The next example (`examples/image-style.yaml`) uses a json config file and a custom image (`main.go`).  It is a more robust solution.
 
 ```
 metadata:
@@ -67,7 +66,7 @@ metadata:
         }
       {{- end }}
     vault.hashicorp.com/agent-init-first: 'true'
-    vault.hashicorp.com/agent-cache-enable: "true"
+    vault.hashicorp.com/agent-cache-enable: 'true'
 ```
 
 ## Build
@@ -80,7 +79,7 @@ docker build -t atlas-wait-ready .
 
 For anything other than PoC or sandbox, I recommend building and maintaining this image in an in-house registry.
 
-Push to your registry of choice and update the initContainer's image path in the example patch snippet below.
+Push to your registry and update the initContainer's image path in the example patch snippet below.
 
 ```
   initContainers:
@@ -108,8 +107,8 @@ MongoDB Atlas Authentication Succeeded and Primary Pinged.
 Exiting
 ```
 
-The above test implies Atlas took ~10 seconds to apply and confirm the database user is ready for use.  The example image build is about 15MB in size (compressed).
+The above test implies Atlas took ~10 seconds to apply and confirm the database user is ready for use.  The example image build is about 15MB in size (compressed).  Further reduction in image size could be achieved by removing the database connectivity test (and dependencies) and exit after confirming the Atlas API completed the plan changes.
 
 ## Disclaimer
 
-Not supported by anyone.
+This example solution is not supported by MongoDB.
